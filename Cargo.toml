@@ -1,7 +1,8 @@
 [package]
-name = "snake-amethyst"
+name = "amethyst-snake"
 version = "0.1.0"
 authors = ["ab0v3g4me <udzizz@gmail.com>"]
-edition = "2018"
 
 [dependencies]
+amethyst = { git = "https://github.com/amethyst/amethyst", rev = "44c87a512cacbbfd774433bd6f6d935ed97b6c0d", features = ["nightly"] }
+rand = "*"

@@ -1,0 +1,10 @@
+(
+  dimensions: Some((400, 400)),
+  max_dimensions: Some((400, 400)),
+  min_dimensions: Some((400, 400)),
+  fullscreen: false,
+  multisampling: 0,
+  title: "Snake",
+  visibility: true,
+  vsync: true,
+)
