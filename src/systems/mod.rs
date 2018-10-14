@@ -10,7 +10,7 @@ pub struct SnakeSystemBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for SnakeSystemBundle {
     fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
-        builder.add(SnakeMovementSystem { segments: vec![]}, "player_movement", &[]);
+        builder.add(SnakeMovementSystem, "player_movement", &[]);
         Ok(())
     }
 }

@@ -1,52 +1,62 @@
 use amethyst::{
-    assets::{AssetStorage, Loader},
     core::{
-        cgmath::{Matrix4, Vector3},
+        cgmath::Vector3,
         transform::{GlobalTransform, Transform},
     },
     ecs::prelude::{Component, DenseVecStorage},
     prelude::*,
-    renderer::{
-        Camera, MaterialTextureSet, PngFormat, Projection, Sprite, SpriteRender, SpriteSheet,
-        SpriteSheetHandle, Texture, TextureCoordinates, TextureMetadata,ScreenDimensions,
-    },
+    renderer::{SpriteRender, SpriteSheetHandle,ScreenDimensions},
 };
+use rand;
 use rand::Rng;
 
-pub struct HeadSegment {
-    direction: SegmentDirection,
+
+
+#[derive(PartialEq,Eq,Debug)]
+pub enum SegmentType {
+    Head,
+    Body,
 }
 
-impl Default for HeadSegment {
+#[derive(Debug)]
+pub enum SegmentDirection {
+    Left,
+    Right,
+    Up,
+    Down,
+    Idle,
+}
+
+#[derive(Debug)]
+pub struct Segment{
+    pub t: SegmentType,
+    pub direction: SegmentDirection,
+}
+impl Default for Segment {
     fn default() -> Self {
-        HeadSegment {
-            direction: SegmentDirection::Up,
+        Segment {
+            t: SegmentType::Head,
+            direction: SegmentDirection::Idle,
         }
     }
 }
-
-impl Component for HeadSegment {
+impl Component for Segment {
     type Storage = DenseVecStorage<Self>;
 }
 
-pub struct BodySegment{
-    direction: SegmentDirection,
-}
+pub struct Snake(Vec<Segment>);
 
-impl Default for BodySegment {
+impl Default for Snake {
     fn default() -> Self {
-        BodySegment {
-            direction: SegmentDirection::Up,
-        }
+        Snake(Vec::new())
     }
 }
 
-impl Component for BodySegment {
-    type Storage = DenseVecStorage<Self>;
-}
 
-pub fn create_head(world: &mut World,sheet_handle: SpriteSheetHandle){
-    world.register::<HeadSegment>();
+pub fn initialise_snake(world: &mut World,sheet_handle: SpriteSheetHandle){
+    world.add_resource(Snake(Vec::new()));
+    world.register::<Segment>();
+
     let snake_color_id = rand::thread_rng().gen_range(0,7);
 
     let snake_sprite = SpriteRender {
@@ -63,19 +73,16 @@ pub fn create_head(world: &mut World,sheet_handle: SpriteSheetHandle){
     };
 
     let mut transform = Transform::default();
-    transform.translation = Vector3::new(width / 2.0, height / 2.0,0.0);
+    
+    let (x,y) = ((width / 16.0).round() * 8.0,(height / 16.0).round() * 8.0);
+    
+    transform.translation = Vector3::new(x,y,0.0);
 
     world.create_entity()
                 .with(snake_sprite)
                 .with(GlobalTransform::default())
                 .with(transform)
-                .with(HeadSegment::default())
+                .with(Segment::default())
                 .build();
 }
 
-pub enum SegmentDirection {
-    Left,
-    Right,
-    Up,
-    Down,
-}

@@ -1,40 +1,42 @@
-use amethyst::{State,GameData,StateData,GameDataBuilder};
 use amethyst::shred::System;
-use amethyst::core::timing::Time;
-use amethyst::ecs::prelude::{Resources,Join,Read,World,WriteStorage,ReadStorage,Write};
+use amethyst::ecs::prelude::{Join,Read,WriteStorage,Write};
 use amethyst::core::transform::Transform;
 use amethyst::input::InputHandler;
-use amethyst::core::cgmath::{Vector3,Vector2 ,Point3,Angle,Rad};
+use amethyst::core::cgmath::Vector3;
 use amethyst::renderer::VirtualKeyCode;
 
 
-use snake::{HeadSegment,BodySegment};
+use snake::{Segment,SegmentType,SegmentDirection,Snake};
 
-pub struct SnakeMovementSystem {
-    pub segments: Vec<BodySegment>,
-}
+pub struct SnakeMovementSystem;
 
 impl<'s> System<'s> for SnakeMovementSystem {
     type SystemData = (
         WriteStorage<'s,Transform>,
+        WriteStorage<'s, Segment>,
         Read<'s, InputHandler<String,String>>,
-        ReadStorage<'s, HeadSegment>
     );
     
-    fn run(&mut self, (mut transforms,input, head_segs) : Self::SystemData) {
-        if input.key_is_down(VirtualKeyCode::W) {
-            println!("W is down.");
-        } else if input.key_is_down(VirtualKeyCode::A) {
+    fn run(&mut self, (mut transforms,mut segments,input) : Self::SystemData) {
+        let (pos,head) = (&mut transforms, &mut segments).join().filter(|e| e.1.t == SegmentType::Head).next().unwrap();
 
-        } else if input.key_is_down(VirtualKeyCode::S) {
+        let pressed_keys: Vec<VirtualKeyCode> = input.keys_that_are_down().collect();
+        if let Some(key) = &pressed_keys[..].last() {
+            head.direction = match key {
+                VirtualKeyCode::W => SegmentDirection::Up,
+                VirtualKeyCode::A => SegmentDirection::Left,
+                VirtualKeyCode::S => SegmentDirection::Down,
+                VirtualKeyCode::D => SegmentDirection::Right,
+                _ => return,
+            }
+        };
 
-        } else {
-            // D
+        match head.direction {
+            SegmentDirection::Up => {pos.translation += Vector3::new(0.0,8.0,0.0);},
+            SegmentDirection::Left => {pos.translation += Vector3::new(-8.0,0.0,0.0);},
+            SegmentDirection::Down => {pos.translation += Vector3::new(0.0,-8.0,0.0);},
+            SegmentDirection::Right => {pos.translation += Vector3::new(8.0,0.0,0.0);},
+            _ => (),
         }
-        
-        if let Some((pos,head)) = (&mut transforms, &head_segs).join().next() {
-
-        }
-
     }
 }
