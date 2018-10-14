@@ -18,7 +18,7 @@ impl<'s> System<'s> for SnakeMovementSystem {
     );
     
     fn run(&mut self, (mut transforms,mut segments,input) : Self::SystemData) {
-        let (pos,head) = (&mut transforms, &mut segments).join().filter(|e| e.1.t == SegmentType::Head).next().unwrap();
+        let (pos,head) = (&mut transforms, &mut segments).join().find(|(_,s)| s.t == SegmentType::Head).unwrap();
 
         let pressed_keys: Vec<VirtualKeyCode> = input.keys_that_are_down().collect();
         if let Some(key) = &pressed_keys[..].last() {

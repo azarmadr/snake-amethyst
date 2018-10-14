@@ -14,6 +14,7 @@ use std::time::Duration;
 
 mod systems;
 mod snake;
+mod spawnables;
 mod game;
 use game::SnakeGame;
 
