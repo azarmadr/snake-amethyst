@@ -31,12 +31,23 @@ pub enum SegmentDirection {
 pub struct Segment{
     pub t: SegmentType,
     pub direction: SegmentDirection,
+    pub id: u32,
+}
+impl Segment {
+    pub fn body(direction: SegmentDirection,id: u32) -> Self {
+        Segment {
+            t: SegmentType::Body,
+            direction: direction,
+            id: id,
+        }
+    }
 }
 impl Default for Segment {
     fn default() -> Self {
         Segment {
             t: SegmentType::Head,
             direction: SegmentDirection::Idle,
+            id: 0,
         }
     }
 }
@@ -76,7 +87,7 @@ pub fn initialise_snake(world: &mut World,sheet_handle: SpriteSheetHandle){
     
     let (x,y) = ((width / 16.0).round() * 8.0,(height / 16.0).round() * 8.0);
     
-    transform.translation = Vector3::new(x,y,0.0);
+    transform.translation = Vector3::new(0.0,0.0,0.0);
 
     world.create_entity()
                 .with(snake_sprite)

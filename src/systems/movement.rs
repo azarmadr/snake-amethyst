@@ -20,8 +20,7 @@ impl<'s> System<'s> for SnakeMovementSystem {
     fn run(&mut self, (mut transforms,mut segments,input) : Self::SystemData) {
         let (pos,head) = (&mut transforms, &mut segments).join().find(|(_,s)| s.t == SegmentType::Head).unwrap();
 
-        let pressed_keys: Vec<VirtualKeyCode> = input.keys_that_are_down().collect();
-        if let Some(key) = &pressed_keys[..].last() {
+        if let Some(key) = input.keys_that_are_down().last() {
             head.direction = match key {
                 VirtualKeyCode::W => SegmentDirection::Up,
                 VirtualKeyCode::A => SegmentDirection::Left,

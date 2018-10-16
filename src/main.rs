@@ -7,7 +7,7 @@ use amethyst::{
         frame_limiter::FrameRateLimitStrategy,
     },
     prelude::*,
-    renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage},
+    renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage,ColorMask,DepthMode,ALPHA},
     input::InputBundle,
 };
 use std::time::Duration;
@@ -33,7 +33,11 @@ fn main() -> amethyst::Result<()> {
     let pipe = Pipeline::build().with_stage(
         Stage::with_backbuffer()
             .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawSprite::new()),
+            .with_pass(DrawSprite::new().with_transparency(
+                ColorMask::all(),
+                ALPHA,
+                Some(DepthMode::LessEqualWrite),
+            )),
     );
 
     let input_bundle = InputBundle::<String, String>::new();
@@ -45,7 +49,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(input_bundle)?;
 
     Application::build(assets_dir, SnakeGame)?
-        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(1)),5)
+        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(1)),10)
         .build(game_data)?
         .run();
     Ok(())
