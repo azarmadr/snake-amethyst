@@ -11,6 +11,7 @@ use amethyst::renderer::SpriteRender;
 
 use std::time::{Duration,Instant};
 use spawnables::Food;
+use snake::{Segment,SegmentType,SegmentDirection};
 use rand;
 use rand::Rng;
 
@@ -29,17 +30,59 @@ impl<'s> System<'s> for SpawningSystem {
         ReadExpect<'s, Backpack>,
         WriteStorage<'s, SpriteRender>,
         WriteStorage<'s, GlobalTransform>,
+        WriteStorage<'s, Segment>
     );
     fn setup(&mut self, _res: &mut Resources) {
         self.respawn_time = Stopwatch::Started(Duration::from_millis(0), Instant::now());
     }
-    fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut gtransforms) : Self::SystemData) {
+    fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut gtransforms,mut segments) : Self::SystemData) {
+        for (e,food) in (&*entities,&mut foods).join() {
+            if food.0 {
+                let _ = entities.delete(e);    
+
+            let sprite_sheet = if let Some(ref sheet) = backpack.snake_sheet {
+                    sheet.clone()
+                } else {
+                    return;
+            };
+
+            let (mut pos,seg_dir,sprite_id) = { 
+                let (pos,head,sprite) = (&transforms, &segments,&sprites).join().last().unwrap();
+                (pos.translation, head.direction,sprite.sprite_number)
+            };
+
+            let snake_sprite = SpriteRender {
+                sprite_sheet: sprite_sheet,
+                sprite_number: sprite_id,
+                flip_horizontal: false,
+                flip_vertical: false,
+            };
+
+            let mut transform = Transform::default();
+            pos += match seg_dir {
+                SegmentDirection::Up => Vector3::new(0.0,8.0,0.0),
+                SegmentDirection::Left => Vector3::new(-8.0,0.0,0.0),
+                SegmentDirection::Down => Vector3::new(0.0,-8.0,0.0),
+                SegmentDirection::Right => Vector3::new(8.0,0.0,0.0),
+                _ => Vector3::new(0.0,0.0,0.0),
+            };
+            
+            transform.translation = pos;
+
+            /*entities.build_entity()
+                    .with(snake_sprite, &mut sprites)
+                    .with(GlobalTransform::default(),&mut gtransforms)
+                    .with(transform,&mut transforms)
+                    .with(Segment::body(seg_dir,(segments).join().size_hint().0 as u32), &mut segments)
+                    .build();*/
+            }
+        }
+        
         if self.respawn_time.elapsed() > Duration::from_millis(3000) {
             let mut transform = Transform::default();
             
             if let None = transforms.join().find(|t| t.translation == transform.translation) {
                 transform.translation = generate_random_pos(dimns.width(),dimns.height());
-                println!("Food at: {:?}", transform.translation);
             } else {
                 return;
             }
@@ -65,6 +108,7 @@ impl<'s> System<'s> for SpawningSystem {
                     .with(food_sprite, &mut sprites)
                     .with(Food::default(), &mut foods)
                     .build();
+
             self.respawn_time.restart();
         }
 
@@ -72,10 +116,7 @@ impl<'s> System<'s> for SpawningSystem {
 }
 
 pub fn generate_random_pos(width: f32,height: f32) -> Vector3<f32> {
-    let (mut x,mut y) = (1, 1);
-    while x % 8 != 0 && y % 8 != 0 {
-        x = rand::thread_rng().gen_range(0,width as u32);
-        y = rand::thread_rng().gen_range(0,height as u32);
-    }
-    Vector3::new(x as f32,y as f32,0.0)
+    let x = (rand::thread_rng().gen_range(0,width as u32) as f32 / 8.0).floor() * 8.0;
+    let y = (rand::thread_rng().gen_range(0,height as u32) as f32 / 8.0).floor() * 8.0;
+    Vector3::new(x,y,0.0)
 }

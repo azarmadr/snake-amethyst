@@ -18,7 +18,7 @@ pub enum SegmentType {
     Body,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 pub enum SegmentDirection {
     Left,
     Right,
@@ -55,17 +55,9 @@ impl Component for Segment {
     type Storage = DenseVecStorage<Self>;
 }
 
-pub struct Snake(Vec<Segment>);
-
-impl Default for Snake {
-    fn default() -> Self {
-        Snake(Vec::new())
-    }
-}
 
 
 pub fn initialise_snake(world: &mut World,sheet_handle: SpriteSheetHandle){
-    world.add_resource(Snake(Vec::new()));
     world.register::<Segment>();
 
     let snake_color_id = rand::thread_rng().gen_range(0,7);
@@ -87,7 +79,7 @@ pub fn initialise_snake(world: &mut World,sheet_handle: SpriteSheetHandle){
     
     let (x,y) = ((width / 16.0).round() * 8.0,(height / 16.0).round() * 8.0);
     
-    transform.translation = Vector3::new(0.0,0.0,0.0);
+    transform.translation = Vector3::new(x,y,0.0);
 
     world.create_entity()
                 .with(snake_sprite)

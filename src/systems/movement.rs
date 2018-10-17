@@ -6,7 +6,7 @@ use amethyst::core::cgmath::Vector3;
 use amethyst::renderer::VirtualKeyCode;
 
 
-use snake::{Segment,SegmentType,SegmentDirection,Snake};
+use snake::{Segment,SegmentType,SegmentDirection};
 
 pub struct SnakeMovementSystem;
 
@@ -14,28 +14,17 @@ impl<'s> System<'s> for SnakeMovementSystem {
     type SystemData = (
         WriteStorage<'s,Transform>,
         WriteStorage<'s, Segment>,
-        Read<'s, InputHandler<String,String>>,
     );
     
-    fn run(&mut self, (mut transforms,mut segments,input) : Self::SystemData) {
-        let (pos,head) = (&mut transforms, &mut segments).join().find(|(_,s)| s.t == SegmentType::Head).unwrap();
-
-        if let Some(key) = input.keys_that_are_down().last() {
-            head.direction = match key {
-                VirtualKeyCode::W => SegmentDirection::Up,
-                VirtualKeyCode::A => SegmentDirection::Left,
-                VirtualKeyCode::S => SegmentDirection::Down,
-                VirtualKeyCode::D => SegmentDirection::Right,
-                _ => return,
-            }
-        };
-
-        match head.direction {
-            SegmentDirection::Up => {pos.translation += Vector3::new(0.0,8.0,0.0);},
-            SegmentDirection::Left => {pos.translation += Vector3::new(-8.0,0.0,0.0);},
-            SegmentDirection::Down => {pos.translation += Vector3::new(0.0,-8.0,0.0);},
-            SegmentDirection::Right => {pos.translation += Vector3::new(8.0,0.0,0.0);},
-            _ => (),
+    fn run(&mut self, (mut transforms,mut segments) : Self::SystemData) {
+        for (transform, segment) in (&mut transforms,&mut segments).join() {
+            transform.translation += match segment.direction {
+                SegmentDirection::Up => Vector3::new(0.0,8.0,0.0),
+                SegmentDirection::Left => Vector3::new(-8.0,0.0,0.0),
+                SegmentDirection::Down => Vector3::new(0.0,-8.0,0.0),
+                SegmentDirection::Right => Vector3::new(8.0,0.0,0.0),
+                _ => Vector3::new(0.0,0.0,0.0),
+            };
         }
     }
 }

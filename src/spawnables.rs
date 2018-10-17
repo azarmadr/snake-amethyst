@@ -8,7 +8,7 @@ use amethyst::{
     renderer::{SpriteRender, SpriteSheetHandle,ScreenDimensions},
 };
 
-pub struct Food(bool);
+pub struct Food(pub bool);
 
 
 impl Default for Food {
