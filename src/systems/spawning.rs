@@ -63,7 +63,6 @@ impl<'s> System<'s> for SpawningSystem {
                     flip_vertical: false,
                 };
 
-                let mut transform = Transform::default();
                 pos += match seg_dir {
                     SegmentDirection::Up => Vector3::new(0.0,-8.0,0.0),
                     SegmentDirection::Left => Vector3::new(8.0,0.0,0.0),
@@ -72,12 +71,10 @@ impl<'s> System<'s> for SpawningSystem {
                     _ => Vector3::new(0.0,0.0,0.0),
                 };
                 
-                transform.translation = pos;
-
                 entities.build_entity()
                         .with(snake_sprite, &mut sprites)
                         .with(GlobalTransform::default(),&mut gtransforms)
-                        .with(transform,&mut transforms)
+                        .with(Transform::from(pos),&mut transforms)
                         .with(Segment::body(seg_dir, snake.score), &mut segments)
                         .build();
             }
