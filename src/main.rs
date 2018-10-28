@@ -2,16 +2,16 @@ extern crate amethyst;
 extern crate rand;
 
 use amethyst::{
+    LoggerConfig,StdoutLog,
     core::{
         transform::TransformBundle, 
         frame_limiter::FrameRateLimitStrategy,
     },
     prelude::*,
-    renderer::{DisplayConfig, DrawSprite, Pipeline, RenderBundle, Stage,ColorMask,DepthMode,ALPHA},
+    renderer::{DisplayConfig,DrawSprite, Pipeline, RenderBundle, Stage,ColorMask,DepthMode,ALPHA},
     input::InputBundle,
 };
 use std::time::Duration;
-
 mod systems;
 mod snake;
 mod spawnables;
@@ -23,7 +23,9 @@ mod utilities;
 
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(Default::default());
+    let mut logger_config = LoggerConfig::default();
+    logger_config.stdout = StdoutLog::Off;
+    amethyst::start_logger(logger_config);
 
     let resources_dir = format!("{}/resources/", env!("CARGO_MANIFEST_DIR"));
     let assets_dir = format!("{}/assets/", env!("CARGO_MANIFEST_DIR"));
@@ -36,7 +38,7 @@ fn main() -> amethyst::Result<()> {
             .with_pass(DrawSprite::new().with_transparency(
                 ColorMask::all(),
                 ALPHA,
-                Some(DepthMode::LessEqualWrite),
+                None,
             )),
     );
 
@@ -49,7 +51,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(input_bundle)?;
 
     Application::build(assets_dir, SnakeGame)?
-        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(1)),10)
+        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(1)),60)
         .build(game_data)?
         .run();
     Ok(())

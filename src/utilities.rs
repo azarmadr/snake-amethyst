@@ -1,4 +1,4 @@
-use amethyst::renderer::{ScreenDimensions,Projection,Camera,PngFormat,Texture,MaterialTextureSet,Sprite,SpriteSheetHandle,TextureCoordinates,SpriteSheet};
+use amethyst::renderer::{TextureMetadata,ScreenDimensions,Projection,Camera,PngFormat,Texture,MaterialTextureSet,Sprite,SpriteSheetHandle,TextureCoordinates,SpriteSheet};
 use amethyst::assets::{AssetStorage,Loader};
 use amethyst::prelude::*;
 use amethyst::core::cgmath::{Vector3, Matrix4};
@@ -10,7 +10,7 @@ fn load_texture_from_image(world: &mut World,image_path: &str,texture_id: u64) {
     let texture_handle = loader.load(
             image_path,
             PngFormat,
-            Default::default(),
+            TextureMetadata::srgb(),
             (),
             &texture_storage);
     let mut material_texture_set = world.write_resource::<MaterialTextureSet>();

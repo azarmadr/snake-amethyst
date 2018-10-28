@@ -1,30 +1,76 @@
 use amethyst::shred::System;
-use amethyst::ecs::prelude::{Join,Read,WriteStorage,Write};
+use amethyst::ecs::prelude::{Join,Read,WriteStorage,Write,Resources,WriteExpect};
 use amethyst::core::transform::Transform;
 use amethyst::input::InputHandler;
 use amethyst::core::cgmath::Vector3;
 use amethyst::renderer::VirtualKeyCode;
+use amethyst::core::timing::Stopwatch;
 
+use snake::{Segment,SegmentType,SegmentDirection,Snake};
 
-use snake::{Segment,SegmentType,SegmentDirection};
+use std::time::{Duration,Instant};
 
-pub struct SnakeMovementSystem;
+pub struct SnakeMovementSystem {
+    pub tick: Stopwatch,
+    pub tick_period: Duration
+}
+impl Default for SnakeMovementSystem {
+    fn default() -> Self {
+        Self {
+            tick: Stopwatch::new(),
+            tick_period: Duration::from_millis( ((1.0/6.0) * 1000.0) as u64 ) ,
+        }
+    }
+}
 
 impl<'s> System<'s> for SnakeMovementSystem {
     type SystemData = (
         WriteStorage<'s,Transform>,
         WriteStorage<'s, Segment>,
+        WriteExpect<'s, Snake>,
     );
-    
-    fn run(&mut self, (mut transforms,mut segments) : Self::SystemData) {
-        for (transform, segment) in (&mut transforms,&mut segments).join() {
-            transform.translation += match segment.direction {
+    fn setup(&mut self, _res: &mut Resources) {
+        self.tick = Stopwatch::Started(Duration::from_millis(0), Instant::now());
+    }
+    fn run(&mut self, (mut transforms,mut segments,mut snake) : Self::SystemData) {
+        let period = Duration::from_millis((snake.score * 5) as u64);
+        let current_pos = if self.tick.elapsed() > ( self.tick_period - period ){
+            let (transf,head_segment) = (&mut transforms, &segments).join().find(|(_,s)| s.t == SegmentType::Head).unwrap();
+            snake.last_head_pos = transf.translation;
+            snake.last_head_dir = head_segment.direction;
+            transf.translation += match head_segment.direction {
                 SegmentDirection::Up => Vector3::new(0.0,8.0,0.0),
                 SegmentDirection::Left => Vector3::new(-8.0,0.0,0.0),
                 SegmentDirection::Down => Vector3::new(0.0,-8.0,0.0),
                 SegmentDirection::Right => Vector3::new(8.0,0.0,0.0),
                 _ => Vector3::new(0.0,0.0,0.0),
             };
+            self.tick.restart();
+            transf.translation
+        } else {
+            snake.last_head_pos
+        };
+        if snake.last_head_pos != current_pos {
+            let dirs = {
+                (&segments).join().filter(|s| s.t == SegmentType::Body).map(|s| s.direction).collect::<Vec<_>>()
+            };
+            for (idx,(trans, seg)) in (&mut transforms, &mut segments).join().filter(|(_,s)| s.t == SegmentType::Body).enumerate() {
+                trans.translation += match seg.direction {
+                    SegmentDirection::Up => Vector3::new(0.0,8.0,0.0),
+                    SegmentDirection::Left => Vector3::new(-8.0,0.0,0.0),
+                    SegmentDirection::Down => Vector3::new(0.0,-8.0,0.0),
+                    SegmentDirection::Right => Vector3::new(8.0,0.0,0.0),
+                    _ => Vector3::new(0.0,0.0,0.0),
+                };
+                if idx == 0 {
+                    seg.direction = snake.last_head_dir;
+                } else {
+                    seg.direction = dirs[idx-1]; 
+                }
+            }
+
         }
+        
+
     }
 }

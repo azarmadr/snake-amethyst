@@ -1,8 +1,6 @@
 use amethyst::shred::System;
-use amethyst::ecs::prelude::{Join,Read,WriteStorage,Write,ReadExpect,Entities,WriteExpect,Resources};
-use amethyst::ecs::World;
+use amethyst::ecs::prelude::{Join,WriteStorage,ReadExpect,Entities,WriteExpect,Resources};
 use amethyst::core::transform::{GlobalTransform,Transform};
-use amethyst::input::InputHandler;
 use amethyst::core::cgmath::Vector3;
 use amethyst::renderer::ScreenDimensions;
 use amethyst::core::timing::Stopwatch;
@@ -11,7 +9,7 @@ use amethyst::renderer::SpriteRender;
 
 use std::time::{Duration,Instant};
 use spawnables::Food;
-use snake::{Segment,SegmentType,SegmentDirection};
+use snake::{Segment,SegmentType,SegmentDirection,Snake};
 use rand;
 use rand::Rng;
 
@@ -20,7 +18,13 @@ use game::Backpack;
 pub struct SpawningSystem{
     pub respawn_time: Stopwatch,
 }
-
+impl Default for SpawningSystem {
+    fn default() -> Self {
+        Self {
+            respawn_time: Stopwatch::new(),
+        }
+    }
+}
 impl<'s> System<'s> for SpawningSystem {
     type SystemData = (
         Entities<'s>,
@@ -30,51 +34,52 @@ impl<'s> System<'s> for SpawningSystem {
         ReadExpect<'s, Backpack>,
         WriteStorage<'s, SpriteRender>,
         WriteStorage<'s, GlobalTransform>,
-        WriteStorage<'s, Segment>
+        WriteStorage<'s, Segment>,
+        WriteExpect<'s, Snake>,
     );
     fn setup(&mut self, _res: &mut Resources) {
         self.respawn_time = Stopwatch::Started(Duration::from_millis(0), Instant::now());
     }
-    fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut gtransforms,mut segments) : Self::SystemData) {
+    fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut gtransforms,mut segments,mut snake) : Self::SystemData) {
         for (e,food) in (&*entities,&mut foods).join() {
             if food.0 {
-                let _ = entities.delete(e);    
+                snake.score += 1;
 
-            let sprite_sheet = if let Some(ref sheet) = backpack.snake_sheet {
-                    sheet.clone()
-                } else {
-                    return;
-            };
+                let sprite_sheet = if let Some(ref sheet) = backpack.snake_sheet {
+                        sheet.clone()
+                    } else {
+                        return;
+                };
 
-            let (mut pos,seg_dir,sprite_id) = { 
-                let (pos,head,sprite) = (&transforms, &segments,&sprites).join().last().unwrap();
-                (pos.translation, head.direction,sprite.sprite_number)
-            };
+                let (mut pos,seg_dir,sprite_id) = { 
+                    let (pos,seg,sprite) = (&transforms, &segments,&sprites).join().last().unwrap();
+                    (pos.translation, seg.direction,sprite.sprite_number)
+                };
 
-            let snake_sprite = SpriteRender {
-                sprite_sheet: sprite_sheet,
-                sprite_number: sprite_id,
-                flip_horizontal: false,
-                flip_vertical: false,
-            };
+                let snake_sprite = SpriteRender {
+                    sprite_sheet: sprite_sheet,
+                    sprite_number: sprite_id,
+                    flip_horizontal: false,
+                    flip_vertical: false,
+                };
 
-            let mut transform = Transform::default();
-            pos += match seg_dir {
-                SegmentDirection::Up => Vector3::new(0.0,8.0,0.0),
-                SegmentDirection::Left => Vector3::new(-8.0,0.0,0.0),
-                SegmentDirection::Down => Vector3::new(0.0,-8.0,0.0),
-                SegmentDirection::Right => Vector3::new(8.0,0.0,0.0),
-                _ => Vector3::new(0.0,0.0,0.0),
-            };
-            
-            transform.translation = pos;
+                let mut transform = Transform::default();
+                pos += match seg_dir {
+                    SegmentDirection::Up => Vector3::new(0.0,-8.0,0.0),
+                    SegmentDirection::Left => Vector3::new(8.0,0.0,0.0),
+                    SegmentDirection::Down => Vector3::new(0.0,8.0,0.0),
+                    SegmentDirection::Right => Vector3::new(-8.0,0.0,0.0),
+                    _ => Vector3::new(0.0,0.0,0.0),
+                };
+                
+                transform.translation = pos;
 
-            /*entities.build_entity()
-                    .with(snake_sprite, &mut sprites)
-                    .with(GlobalTransform::default(),&mut gtransforms)
-                    .with(transform,&mut transforms)
-                    .with(Segment::body(seg_dir,(segments).join().size_hint().0 as u32), &mut segments)
-                    .build();*/
+                entities.build_entity()
+                        .with(snake_sprite, &mut sprites)
+                        .with(GlobalTransform::default(),&mut gtransforms)
+                        .with(transform,&mut transforms)
+                        .with(Segment::body(seg_dir, snake.score), &mut segments)
+                        .build();
             }
         }
         

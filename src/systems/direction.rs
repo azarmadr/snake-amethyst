@@ -2,7 +2,6 @@ use amethyst::shred::System;
 use amethyst::ecs::prelude::{Join,Read,WriteStorage};
 use amethyst::core::transform::Transform;
 use amethyst::input::InputHandler;
-use amethyst::core::cgmath::Vector3;
 use amethyst::renderer::VirtualKeyCode;
 
 
@@ -30,19 +29,5 @@ impl<'s> System<'s> for HeadDirectionSystem {
                 }
             };
         }
-        { 
-            let mut elements: Vec<_> = (&mut segments).join().collect();
-            &elements[..].sort_by_key(|e| e.id ); 
-            for idx in 0..elements.len() {
-                if idx == elements.len() - 1 { 
-                    return;
-                } 
-                if elements.len() == 1 {
-                    continue;
-                }
-                elements[idx+1].direction = elements[idx].direction;
-            }
-        }
-
     }
 }

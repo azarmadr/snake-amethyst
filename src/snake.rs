@@ -12,6 +12,21 @@ use rand::Rng;
 
 
 
+pub struct Snake {
+    pub last_head_pos: Vector3<f32>,
+    pub last_head_dir: SegmentDirection,
+    pub score: u32,
+}
+impl Snake {
+    pub fn new(pos: Vector3<f32>,dir: SegmentDirection) -> Self {
+        Snake {
+            last_head_pos: pos,
+            last_head_dir: dir,
+            score: 0,
+        }
+    }
+}
+
 #[derive(PartialEq,Eq,Debug)]
 pub enum SegmentType {
     Head,
@@ -74,17 +89,15 @@ pub fn initialise_snake(world: &mut World,sheet_handle: SpriteSheetHandle){
         assert!(dimn.width() % 8.0 == 0.0, dimn.height() % 8.0 == 0.0);
         (dimn.width(), dimn.height())
     };
-
-    let mut transform = Transform::default();
     
     let (x,y) = ((width / 16.0).round() * 8.0,(height / 16.0).round() * 8.0);
-    
-    transform.translation = Vector3::new(x,y,0.0);
+
+    world.add_resource(Snake::new(Vector3::new(x,y,0.0),SegmentDirection::Idle));
 
     world.create_entity()
                 .with(snake_sprite)
                 .with(GlobalTransform::default())
-                .with(transform)
+                .with(Transform::from(Vector3::new(x,y,0.0)))
                 .with(Segment::default())
                 .build();
 }
