@@ -18,16 +18,24 @@ impl<'s> System<'s> for CollisionSystem {
     );
     
     fn run(&mut self, (entities,transforms,segments,mut foods,dimensions) : Self::SystemData) {
-        let (head_pos,_) = (&transforms, &segments).join().find(|(_,s)| s.t == SegmentType::Head).unwrap();
+        // Acquiring the head segment.
+        let (head_trans,_) = (&transforms, &segments).join().find(|(_,s)| s.t == SegmentType::Head).unwrap();
+
+        // Checking if the head collides with any other body segments.
+        if let Some(_) = (&transforms, &segments).join()
+                                                 .filter(|(_,s)| s.t == SegmentType::Body)
+                                                 .find(|(t,_)| t == &head_trans) {
+            panic!("Snake eating itself.");
+        } 
         // Checking if the head has collided with the food.
         // Then we set the field to true and in our `removal.rs` we remove all collided food types. 
         for (_e,food_pos,food) in (&*entities, &transforms, &mut foods).join() {
-            if food_pos == head_pos {
+            if food_pos == head_trans {
                 food.0 = true;
             }
         }
-        
-        let pos = head_pos.translation;
+        // Checking if the head collides with the border / window dimensions.
+        let pos = head_trans.translation;
         if pos.x < 0.0 || pos.y < 0.0 || pos.x > dimensions.width() || pos.y > dimensions.height() {
             panic!("Snake went out of bounds.");
         } 

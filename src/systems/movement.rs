@@ -51,14 +51,13 @@ impl<'s> System<'s> for SnakeMovementSystem {
 
         if snake.last_head_pos != current_pos {
             let dirs = {
-                (&segments).join().filter(|s| s.t == SegmentType::Body).map(|s| s.direction).collect::<Vec<_>>()
+                let mut segs: Vec<_> = (segments).join().filter(|s| s.t == SegmentType::Body).collect();
+                segs.sort_by_key(|s| s.id);
+                segs.iter_mut().map(|s| (s.id, s.direction)).collect::<Vec<_>>()
             };
-            for (idx,(trans, seg)) in (&mut transforms, &mut segments).join().filter(|(_,s)| s.t == SegmentType::Body).enumerate() {
-                if idx == 0 {
-                    seg.direction = snake.last_head_dir;
-                } else {
-                    seg.direction = dirs[idx-1]; 
-                }
+            let mut custom_vec: Vec<_> = (&mut transforms, &mut segments).join().filter(|(_,s)| s.t == SegmentType::Body).collect();
+            custom_vec.sort_by_key(|(_,s)| s.id);
+            for (idx,(trans, seg)) in custom_vec.iter_mut().enumerate() {
                 trans.translation += match seg.direction {
                     SegmentDirection::Up => Vector3::new(0.0,8.0,0.0),
                     SegmentDirection::Left => Vector3::new(-8.0,0.0,0.0),
@@ -66,6 +65,11 @@ impl<'s> System<'s> for SnakeMovementSystem {
                     SegmentDirection::Right => Vector3::new(8.0,0.0,0.0),
                     _ => Vector3::new(0.0,0.0,0.0),
                 };
+                if idx == 0 {
+                    seg.direction = snake.last_head_dir;
+                } else {
+                    seg.direction = dirs[idx-1].1; 
+                }
             }
 
         }
