@@ -4,7 +4,7 @@ use utilities::{
     decompile_as_sprites,
     initialise_camera,
 };
-use snake::{Segment,initialise_snake};
+use snake::{initialise_snake};
 use spawnables::Food;
 
 pub struct SnakeGame;
@@ -14,7 +14,6 @@ impl<'a, 'b> State<GameData<'a, 'b>,StateEvent> for SnakeGame {
         let mut world = data.world;
 
         world.register::<Food>();
-        world.register::<Segment>();
 
         let snake_sheet_handle = decompile_as_sprites(&mut world, "SnakeSprite.png", (16.0,32.0), (8.0,8.0), 0);
         let food_sheet_handle = decompile_as_sprites(&mut world, "FoodSprite.png", (16.0,16.0), (8.0,8.0), 1);

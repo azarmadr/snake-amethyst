@@ -51,7 +51,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(input_bundle)?;
 
     Application::build(assets_dir, SnakeGame)?
-        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(1)),60)
+        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),144)
         .build(game_data)?
         .run();
     Ok(())
