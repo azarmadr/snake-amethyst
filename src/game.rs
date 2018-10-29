@@ -4,7 +4,7 @@ use utilities::{
     decompile_as_sprites,
     initialise_camera,
 };
-use snake::{Snake,Segment,initialise_snake};
+use snake::{Segment,initialise_snake};
 use spawnables::Food;
 
 pub struct SnakeGame;

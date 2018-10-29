@@ -15,6 +15,7 @@ use rand::Rng;
 pub struct Snake {
     pub last_head_pos: Vector3<f32>,
     pub last_head_dir: SegmentDirection,
+    pub food_available: bool,
     pub score: u32,
 }
 impl Snake {
@@ -22,6 +23,7 @@ impl Snake {
         Snake {
             last_head_pos: pos,
             last_head_dir: dir,
+            food_available: false,
             score: 0,
         }
     }

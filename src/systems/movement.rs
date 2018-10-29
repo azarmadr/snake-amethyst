@@ -1,10 +1,8 @@
 use amethyst::shred::System;
-use amethyst::ecs::prelude::{Join,Read,WriteStorage,Write,Resources,WriteExpect};
+use amethyst::ecs::prelude::{Join,WriteStorage,Resources,WriteExpect};
 use amethyst::core::transform::Transform;
-use amethyst::input::InputHandler;
 use amethyst::core::cgmath::Vector3;
-use amethyst::renderer::VirtualKeyCode;
-use amethyst::core::timing::Stopwatch;
+use amethyst::core::timing::{Stopwatch};
 
 use snake::{Segment,SegmentType,SegmentDirection,Snake};
 
@@ -50,11 +48,17 @@ impl<'s> System<'s> for SnakeMovementSystem {
         } else {
             snake.last_head_pos
         };
+
         if snake.last_head_pos != current_pos {
             let dirs = {
                 (&segments).join().filter(|s| s.t == SegmentType::Body).map(|s| s.direction).collect::<Vec<_>>()
             };
             for (idx,(trans, seg)) in (&mut transforms, &mut segments).join().filter(|(_,s)| s.t == SegmentType::Body).enumerate() {
+                if idx == 0 {
+                    seg.direction = snake.last_head_dir;
+                } else {
+                    seg.direction = dirs[idx-1]; 
+                }
                 trans.translation += match seg.direction {
                     SegmentDirection::Up => Vector3::new(0.0,8.0,0.0),
                     SegmentDirection::Left => Vector3::new(-8.0,0.0,0.0),
@@ -62,11 +66,6 @@ impl<'s> System<'s> for SnakeMovementSystem {
                     SegmentDirection::Right => Vector3::new(8.0,0.0,0.0),
                     _ => Vector3::new(0.0,0.0,0.0),
                 };
-                if idx == 0 {
-                    seg.direction = snake.last_head_dir;
-                } else {
-                    seg.direction = dirs[idx-1]; 
-                }
             }
 
         }

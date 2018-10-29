@@ -22,7 +22,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for SnakeSystemBundle {
         builder.add(SpawningSystem::default(), "spawning_system", &[]);
         builder.add(SnakeMovementSystem::default(), "snake_movement",  &["head_movement"]); 
         builder.add(CollisionSystem, "collision_system", &[]);
-        builder.add(RemovalSystem, "removal_system", &["spawning_system"]);
+        builder.add(RemovalSystem, "removal_system", &["spawning_system","collision_system"]);
         Ok(())
     }
 }

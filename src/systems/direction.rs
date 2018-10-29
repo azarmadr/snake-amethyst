@@ -16,7 +16,7 @@ impl<'s> System<'s> for HeadDirectionSystem {
         Read<'s, InputHandler<String,String>>,
     );
     
-    fn run(&mut self, (mut transforms,mut segments,input) : Self::SystemData) {
+    fn run(&mut self, (mut _transforms,mut segments,input) : Self::SystemData) {
         { 
             let head = (&mut segments).join().find(|s| s.t == SegmentType::Head).unwrap();
             if let Some(key) = input.keys_that_are_down().last() {

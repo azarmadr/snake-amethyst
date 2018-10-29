@@ -8,7 +8,7 @@ use amethyst::{
         frame_limiter::FrameRateLimitStrategy,
     },
     prelude::*,
-    renderer::{DisplayConfig,DrawSprite, Pipeline, RenderBundle, Stage,ColorMask,DepthMode,ALPHA},
+    renderer::{DisplayConfig,DrawSprite, Pipeline, RenderBundle, Stage,ColorMask,ALPHA},
     input::InputBundle,
 };
 use std::time::Duration;

@@ -2,7 +2,7 @@ use amethyst::renderer::{TextureMetadata,ScreenDimensions,Projection,Camera,PngF
 use amethyst::assets::{AssetStorage,Loader};
 use amethyst::prelude::*;
 use amethyst::core::cgmath::{Vector3, Matrix4};
-use amethyst::core::transform::{GlobalTransform, Transform};
+use amethyst::core::transform::{GlobalTransform};
 
 fn load_texture_from_image(world: &mut World,image_path: &str,texture_id: u64) {
     let loader = world.read_resource::<Loader>();

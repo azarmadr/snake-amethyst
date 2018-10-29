@@ -21,7 +21,7 @@ impl<'s> System<'s> for CollisionSystem {
         let (head_pos,_) = (&transforms, &segments).join().find(|(_,s)| s.t == SegmentType::Head).unwrap();
         // Checking if the head has collided with the food.
         // Then we set the field to true and in our `removal.rs` we remove all collided food types. 
-        for (e,food_pos,food) in (&*entities, &transforms, &mut foods).join() {
+        for (_e,food_pos,food) in (&*entities, &transforms, &mut foods).join() {
             if food_pos == head_pos {
                 food.0 = true;
             }

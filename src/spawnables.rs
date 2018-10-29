@@ -1,11 +1,5 @@
 use amethyst::{
-    core::{
-        cgmath::Vector3,
-        transform::{GlobalTransform, Transform},
-    },
     ecs::prelude::{Component, DenseVecStorage},
-    prelude::*,
-    renderer::{SpriteRender, SpriteSheetHandle,ScreenDimensions},
 };
 
 pub struct Food(pub bool);

@@ -41,8 +41,9 @@ impl<'s> System<'s> for SpawningSystem {
         self.respawn_time = Stopwatch::Started(Duration::from_millis(0), Instant::now());
     }
     fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut gtransforms,mut segments,mut snake) : Self::SystemData) {
-        for _ in (&*entities,&mut foods).join().filter(|(_,f)| f.0 ) {
+        if let Some(_) = (&foods).join().filter(|f| f.0).next() {
             snake.score += 1;
+            snake.food_available = false;
 
             let sprite_sheet = if let Some(ref sheet) = backpack.snake_sheet {
                     sheet.clone()
@@ -80,7 +81,9 @@ impl<'s> System<'s> for SpawningSystem {
                     .build();
         }
         
-        if self.respawn_time.elapsed() > Duration::from_millis(3000) {
+        if snake.food_available == false {
+            snake.food_available = true;
+
             let mut transform = Transform::default();
             
             if let None = transforms.join().find(|t| t.translation == transform.translation) {
@@ -110,7 +113,7 @@ impl<'s> System<'s> for SpawningSystem {
                     .with(food_sprite, &mut sprites)
                     .with(Food::default(), &mut foods)
                     .build();
-
+            
             self.respawn_time.restart();
         }
 

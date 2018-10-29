@@ -1,11 +1,9 @@
 use amethyst::shred::System;
 use amethyst::ecs::prelude::{Join,WriteStorage,ReadStorage,Entities};
-use amethyst::core::transform::Transform;
-
 
 pub struct RemovalSystem;
 
-use snake::{Segment,SegmentType,SegmentDirection};
+use snake::{Segment};
 use spawnables::Food;
 
 impl<'s> System<'s> for RemovalSystem {
@@ -15,8 +13,8 @@ impl<'s> System<'s> for RemovalSystem {
         ReadStorage<'s, Segment>,
     );
     
-    fn run(&mut self, (entities,mut foods,segments) : Self::SystemData) {
-        for (e,f) in (&*entities,&mut foods).join().filter(|(_,f)| f.0 == true) {
+    fn run(&mut self, (entities,mut foods,_segments) : Self::SystemData) {
+        for (e,_) in (&*entities,&mut foods).join().filter(|(_,f)| f.0 == true) {
             let _ = entities.delete(e);
         }
     }
