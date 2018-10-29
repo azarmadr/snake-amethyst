@@ -3,7 +3,7 @@ use amethyst::{
         cgmath::Vector3,
         transform::{GlobalTransform, Transform},
     },
-    ecs::prelude::{Component, DenseVecStorage},
+    ecs::prelude::{Component,VecStorage},
     prelude::*,
     renderer::{SpriteRender, SpriteSheetHandle,ScreenDimensions},
 };
@@ -67,7 +67,7 @@ impl Default for Segment {
     }
 }
 impl Component for Segment {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = VecStorage<Self>;
 }
 
 

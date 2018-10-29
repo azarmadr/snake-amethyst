@@ -9,7 +9,7 @@ use amethyst::renderer::SpriteRender;
 
 use std::time::{Duration,Instant};
 use spawnables::Food;
-use snake::{Segment,SegmentType,SegmentDirection,Snake};
+use snake::{Segment,SegmentDirection,Snake};
 use rand;
 use rand::Rng;
 
@@ -41,43 +41,43 @@ impl<'s> System<'s> for SpawningSystem {
         self.respawn_time = Stopwatch::Started(Duration::from_millis(0), Instant::now());
     }
     fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut gtransforms,mut segments,mut snake) : Self::SystemData) {
-        for (e,food) in (&*entities,&mut foods).join() {
-            if food.0 {
-                snake.score += 1;
+        for _ in (&*entities,&mut foods).join().filter(|(_,f)| f.0 ) {
+            snake.score += 1;
 
-                let sprite_sheet = if let Some(ref sheet) = backpack.snake_sheet {
-                        sheet.clone()
-                    } else {
-                        return;
-                };
+            let sprite_sheet = if let Some(ref sheet) = backpack.snake_sheet {
+                    sheet.clone()
+                } else {
+                    return;
+            };
 
-                let (mut pos,seg_dir,sprite_id) = { 
-                    let (pos,seg,sprite) = (&transforms, &segments,&sprites).join().last().unwrap();
-                    (pos.translation, seg.direction,sprite.sprite_number)
-                };
+            let (mut pos,seg_dir,sprite_id) = { 
+                let mut custom_vec: Vec<_> = (&transforms, &segments,&sprites).join().collect();
+                custom_vec.sort_by_key(|(_,seg,_)| seg.id);
+                let (pos,seg,sprite) = custom_vec.pop().unwrap();
+                (pos.translation, seg.direction,sprite.sprite_number)
+            };
 
-                let snake_sprite = SpriteRender {
-                    sprite_sheet: sprite_sheet,
-                    sprite_number: sprite_id,
-                    flip_horizontal: false,
-                    flip_vertical: false,
-                };
+            let snake_sprite = SpriteRender {
+                sprite_sheet: sprite_sheet,
+                sprite_number: sprite_id,
+                flip_horizontal: false,
+                flip_vertical: false,
+            };
 
-                pos += match seg_dir {
-                    SegmentDirection::Up => Vector3::new(0.0,-8.0,0.0),
-                    SegmentDirection::Left => Vector3::new(8.0,0.0,0.0),
-                    SegmentDirection::Down => Vector3::new(0.0,8.0,0.0),
-                    SegmentDirection::Right => Vector3::new(-8.0,0.0,0.0),
-                    _ => Vector3::new(0.0,0.0,0.0),
-                };
-                
-                entities.build_entity()
-                        .with(snake_sprite, &mut sprites)
-                        .with(GlobalTransform::default(),&mut gtransforms)
-                        .with(Transform::from(pos),&mut transforms)
-                        .with(Segment::body(seg_dir, snake.score), &mut segments)
-                        .build();
-            }
+            pos += match seg_dir {
+                SegmentDirection::Up => Vector3::new(0.0,-8.0,0.0),
+                SegmentDirection::Left => Vector3::new(8.0,0.0,0.0),
+                SegmentDirection::Down => Vector3::new(0.0,8.0,0.0),
+                SegmentDirection::Right => Vector3::new(-8.0,0.0,0.0),
+                _ => Vector3::new(0.0,0.0,0.0),
+            };
+            
+            entities.build_entity()
+                    .with(snake_sprite, &mut sprites)
+                    .with(GlobalTransform::default(),&mut gtransforms)
+                    .with(Transform::from(pos),&mut transforms)
+                    .with(Segment::body(seg_dir, snake.score), &mut segments)
+                    .build();
         }
         
         if self.respawn_time.elapsed() > Duration::from_millis(3000) {
