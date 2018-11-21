@@ -14,7 +14,7 @@ impl<'s> System<'s> for RemovalSystem {
     );
     
     fn run(&mut self, (entities,mut foods,_segments) : Self::SystemData) {
-        for (e,_) in (&*entities,&mut foods).join().filter(|(_,f)| f.0 == true) {
+        if let Some((e,_)) = (&*entities,&mut foods).join().filter(|(_,f)| f.0 == true).next() {
             let _ = entities.delete(e);
         }
     }

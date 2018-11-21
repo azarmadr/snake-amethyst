@@ -1,30 +1,20 @@
 use amethyst::shred::System;
-use amethyst::ecs::prelude::{Join,WriteStorage,ReadExpect,Entities,WriteExpect,Resources};
+use amethyst::ecs::prelude::{Join,WriteStorage,ReadExpect,Entities,WriteExpect};
 use amethyst::core::transform::{GlobalTransform,Transform};
 use amethyst::core::cgmath::Vector3;
 use amethyst::renderer::ScreenDimensions;
-use amethyst::core::timing::Stopwatch;
 use amethyst::renderer::SpriteRender;
 
 
-use std::time::{Duration,Instant};
 use spawnables::Food;
 use snake::{Segment,SegmentDirection,Snake};
 use rand;
 use rand::Rng;
 
-use game::Backpack;
+use utilities::Backpack;
 
-pub struct SpawningSystem{
-    pub respawn_time: Stopwatch,
-}
-impl Default for SpawningSystem {
-    fn default() -> Self {
-        Self {
-            respawn_time: Stopwatch::new(),
-        }
-    }
-}
+pub struct SpawningSystem;
+
 impl<'s> System<'s> for SpawningSystem {
     type SystemData = (
         Entities<'s>,
@@ -37,9 +27,6 @@ impl<'s> System<'s> for SpawningSystem {
         WriteStorage<'s, Segment>,
         WriteExpect<'s, Snake>,
     );
-    fn setup(&mut self, _res: &mut Resources) {
-        self.respawn_time = Stopwatch::Started(Duration::from_millis(0), Instant::now());
-    }
     fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut gtransforms,mut segments,mut snake) : Self::SystemData) {
         if let Some(_) = (&foods).join().filter(|f| f.0).next() {
             snake.score += 1;
@@ -84,13 +71,14 @@ impl<'s> System<'s> for SpawningSystem {
         if snake.food_available == false {
             snake.food_available = true;
 
-            let mut transform = Transform::default();
+            let transform = Transform::default();
             
-            if let None = transforms.join().find(|t| t.translation == transform.translation) {
-                transform.translation = generate_random_pos(dimns.width(),dimns.height());
+            // Does this need refactoring - ?
+            let transform = if let None = transforms.join().find(|t| t.translation == transform.translation) {
+                generate_random_transform(dimns.width(),dimns.height())
             } else {
                 return;
-            }
+            };
 
             let sprite_sheet = if let Some(ref sheet) = backpack.food_sheet {
                 sheet.clone()
@@ -114,14 +102,13 @@ impl<'s> System<'s> for SpawningSystem {
                     .with(Food::default(), &mut foods)
                     .build();
             
-            self.respawn_time.restart();
         }
 
     }
 }
 
-pub fn generate_random_pos(width: f32,height: f32) -> Vector3<f32> {
+pub fn generate_random_transform(width: f32,height: f32) -> Transform {
     let x = (rand::thread_rng().gen_range(0,width as u32) as f32 / 8.0).floor() * 8.0;
     let y = (rand::thread_rng().gen_range(0,height as u32) as f32 / 8.0).floor() * 8.0;
-    Vector3::new(x,y,0.0)
+    Transform::from(Vector3::new(x,y,0.0))
 }

@@ -16,7 +16,7 @@ pub struct Snake {
     pub last_head_pos: Vector3<f32>,
     pub last_head_dir: SegmentDirection,
     pub food_available: bool,
-    pub score: u32,
+    pub score: u64,
 }
 impl Snake {
     pub fn new(pos: Vector3<f32>,dir: SegmentDirection) -> Self {
@@ -48,10 +48,10 @@ pub enum SegmentDirection {
 pub struct Segment{
     pub t: SegmentType,
     pub direction: SegmentDirection,
-    pub id: u32,
+    pub id: u64,
 }
 impl Segment {
-    pub fn body(direction: SegmentDirection,id: u32) -> Self {
+    pub fn body(direction: SegmentDirection,id: u64) -> Self {
         Segment {
             t: SegmentType::Body,
             direction: direction,

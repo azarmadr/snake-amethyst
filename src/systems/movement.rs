@@ -9,14 +9,14 @@ use snake::{Segment,SegmentType,SegmentDirection,Snake};
 use std::time::{Duration,Instant};
 
 pub struct SnakeMovementSystem {
-    pub tick: Stopwatch,
-    pub tick_period: Duration
+    time: Stopwatch,
+    period: Duration,
 }
 impl Default for SnakeMovementSystem {
     fn default() -> Self {
         Self {
-            tick: Stopwatch::new(),
-            tick_period: Duration::from_millis( ((1.0/6.0) * 1000.0) as u64 ) ,
+            time: Stopwatch::new(),
+            period: Duration::from_secs(0),
         }
     }
 }
@@ -28,11 +28,17 @@ impl<'s> System<'s> for SnakeMovementSystem {
         WriteExpect<'s, Snake>,
     );
     fn setup(&mut self, _res: &mut Resources) {
-        self.tick = Stopwatch::Started(Duration::from_millis(0), Instant::now());
+        self.time = Stopwatch::Started(Duration::from_millis(0), Instant::now());
     }
     fn run(&mut self, (mut transforms,mut segments,mut snake) : Self::SystemData) {
-        let period = Duration::from_millis((snake.score * 5) as u64);
-        let current_pos = if self.tick.elapsed() > ( self.tick_period - period ){
+        let period = if let Some(t) = Duration::from_millis( ( 1000.0 / 6.0 ) as u64 ).checked_sub(Duration::from_millis(snake.score)) {
+            self.period = t;
+            t
+        } else {
+            self.period
+        };
+
+        let current_pos = if self.time.elapsed() > period {
             let (transf,head_segment) = (&mut transforms, &segments).join().find(|(_,s)| s.t == SegmentType::Head).unwrap();
             snake.last_head_pos = transf.translation;
             snake.last_head_dir = head_segment.direction;
@@ -43,7 +49,8 @@ impl<'s> System<'s> for SnakeMovementSystem {
                 SegmentDirection::Right => Vector3::new(8.0,0.0,0.0),
                 _ => Vector3::new(0.0,0.0,0.0),
             };
-            self.tick.restart();
+            self.time.restart();
+
             transf.translation
         } else {
             snake.last_head_pos

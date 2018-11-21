@@ -10,13 +10,17 @@ use amethyst::{
     prelude::*,
     renderer::{DisplayConfig,DrawSprite, Pipeline, RenderBundle, Stage,ColorMask,ALPHA},
     input::InputBundle,
+    ui::UiBundle,
 };
 use std::time::Duration;
 mod systems;
 mod snake;
 mod spawnables;
+mod custom_game_data;
 mod game;
+
 use game::SnakeGame;
+use custom_game_data::CustomGameDataBuilder;
 
 mod utilities;
 
@@ -44,14 +48,15 @@ fn main() -> amethyst::Result<()> {
 
     let input_bundle = InputBundle::<String, String>::new();
 
-    let game_data = GameDataBuilder::default()
-        .with_bundle(TransformBundle::new())?
-        .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor().with_sprite_visibility_sorting(&["transform_system"]))?
-        .with_bundle(systems::SnakeSystemBundle)?
-        .with_bundle(input_bundle)?;
+    let game_data = CustomGameDataBuilder::default()
+        .with_base_bundle(TransformBundle::new())?
+        .with_base_bundle(UiBundle::<String,String>::new())?
+        .with_base_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor().with_sprite_visibility_sorting(&["transform_system"]))?
+        .with_base_bundle(input_bundle)?
+        .with_running_bundle(systems::SnakeSystemBundle)?;
 
-    Application::build(assets_dir, SnakeGame)?
-        .with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),144)
+    Application::build(assets_dir, SnakeGame::default())?
+        //.with_frame_limit(FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),144)
         .build(game_data)?
         .run();
     Ok(())

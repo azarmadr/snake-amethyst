@@ -3,14 +3,26 @@ use amethyst::renderer::SpriteSheetHandle;
 use utilities::{
     decompile_as_sprites,
     initialise_camera,
+    Backpack,
 };
+use custom_game_data::CustomGameData;
+
 use snake::{initialise_snake};
 use spawnables::Food;
 
-pub struct SnakeGame;
+pub struct SnakeGame{
+    is_menu_open: bool
+}
+impl Default for SnakeGame {
+    fn default() -> Self {
+        Self {
+            is_menu_open: true,
+        }
+    }
+}
 
-impl<'a, 'b> State<GameData<'a, 'b>,StateEvent> for SnakeGame {
-    fn on_start(&mut self, data: StateData<GameData>) {
+impl<'a, 'b> State<CustomGameData<'a,'b>,StateEvent> for SnakeGame {
+    fn on_start(&mut self, data: StateData<CustomGameData>) {
         let mut world = data.world;
 
         world.register::<Food>();
@@ -24,29 +36,21 @@ impl<'a, 'b> State<GameData<'a, 'b>,StateEvent> for SnakeGame {
         world.add_resource(Backpack::new(snake_sheet_handle,food_sheet_handle));
     }
 
-    fn update(&mut self, data: StateData<GameData<'a,'b>>) -> Trans<GameData<'a,'b>,StateEvent>{
-        data.data.update(&data.world);
+    fn fixed_update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a,'b>,StateEvent>{
+        data.data.update(&data.world,true);
         Trans::None
     }
 }
 
-pub struct Backpack {
-    pub snake_sheet: Option<SpriteSheetHandle>,
-    pub food_sheet: Option<SpriteSheetHandle>,
-}
-impl Backpack {
-    pub fn new(sheet: SpriteSheetHandle,food_sheet: SpriteSheetHandle) -> Self {
-        Backpack {
-            snake_sheet: Some(sheet),
-            food_sheet: Some(food_sheet),
-        }
+struct SnakeMenu;
+
+impl<'a, 'b> State<CustomGameData<'a,'b>,StateEvent> for SnakeMenu {
+    fn on_start(&mut self, data: StateData<CustomGameData>) {
+
     }
-}
-impl Default for Backpack {
-    fn default() -> Self {
-        Backpack {
-            snake_sheet: None,
-            food_sheet: None,
-        }
+
+    fn update(&mut self, data: StateData<CustomGameData>) -> Trans<CustomGameData<'a,'b>,StateEvent>{
+        data.data.update(&data.world,true);
+        Trans::None
     }
 }
