@@ -3,6 +3,7 @@ use amethyst::assets::{AssetStorage,Loader};
 use amethyst::prelude::*;
 use amethyst::core::cgmath::{Vector3, Matrix4};
 use amethyst::core::transform::{GlobalTransform};
+use amethyst::ui::{UiTransform,Anchor,UiImage,UiButton,UiText,get_default_font,FontAsset,LineMode};
 
 fn load_texture_from_image(world: &mut World,image_path: &str,texture_id: u64) {
     let loader = world.read_resource::<Loader>();
@@ -73,6 +74,8 @@ pub fn initialise_camera(world: &mut World) {
         let dimn = world.read_resource::<ScreenDimensions>();
         (dimn.width(), dimn.height())
     };
+
+    
     world.create_entity()
         .with(Camera::from(Projection::orthographic(
             0.0,
@@ -84,6 +87,36 @@ pub fn initialise_camera(world: &mut World) {
             Matrix4::from_translation(Vector3::new(0.0, 0.0, 1.0)).into()
         ))
         .build();
+}
+pub fn initialize_ui(world: &mut World) {
+    let (width,height) = {
+        let dimn = world.read_resource::<ScreenDimensions>();
+        (dimn.width(), dimn.height())
+    };
+    let (texture_handle) = {
+        let loader = world.read_resource::<Loader>();
+        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+        let tex_handle = loader.load(
+            "ui/play_button.png",
+            PngFormat,
+            TextureMetadata::srgb(),
+            (),
+            &texture_storage);
+        let font_storage = world.read_resource::<AssetStorage<FontAsset>>();
+        //let font_handle = get_default_font(&loader, &font_storage);
+        (tex_handle)
+    };
+    let ui_transform = UiTransform::new("play_button".to_owned(), Anchor::Middle, 0.5, 0.5, 0.0, 32.0, 32.0, 0);
+    let ui_image = UiImage { texture : texture_handle };
+    //let ui_text = UiText::new(default_font,"".to_owned(),[0.0;4],0.0);
+    let ui_button = UiButton::new([0.0;4],None,None);
+    world.create_entity()
+        .with(ui_button)
+      //  .with(ui_text)
+        .with(ui_image)
+        .with(ui_transform)
+        .build();
+
 }
 
 pub struct Backpack {
