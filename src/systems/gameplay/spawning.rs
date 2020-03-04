@@ -1,10 +1,10 @@
-use amethyst::shred::System;
-use amethyst::ecs::prelude::{Join,WriteStorage,ReadExpect,Entities,WriteExpect};
-use amethyst::core::transform::{GlobalTransform,Transform};
-use amethyst::core::cgmath::Vector3;
-use amethyst::renderer::ScreenDimensions;
-use amethyst::renderer::SpriteRender;
-
+use amethyst::{
+    window::ScreenDimensions,
+    core::math::Vector3,
+    core::transform::Transform,
+    renderer::SpriteRender,
+    ecs::{Join, WriteExpect, ReadExpect, WriteStorage, Entities, System},
+};
 
 use spawnables::Food;
 use snake::{Segment,SegmentDirection,Snake};
@@ -23,11 +23,10 @@ impl<'s> System<'s> for SpawningSystem {
         ReadExpect<'s, ScreenDimensions>,
         ReadExpect<'s, Backpack>,
         WriteStorage<'s, SpriteRender>,
-        WriteStorage<'s, GlobalTransform>,
         WriteStorage<'s, Segment>,
         WriteExpect<'s, Snake>,
     );
-    fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut gtransforms,mut segments,mut snake) : Self::SystemData) {
+    fn run(&mut self, (entities, mut transforms, mut foods,dimns,backpack,mut sprites,mut segments,mut snake) : Self::SystemData) {
         if let Some(_) = (&foods).join().filter(|f| f.0).next() {
             snake.score += 1;
             snake.food_available = false;
@@ -42,14 +41,12 @@ impl<'s> System<'s> for SpawningSystem {
                 let mut custom_vec: Vec<_> = (&transforms, &segments,&sprites).join().collect();
                 custom_vec.sort_by_key(|(_,seg,_)| seg.id);
                 let (pos,seg,sprite) = custom_vec.pop().unwrap();
-                (pos.translation, seg.direction,sprite.sprite_number)
+                (pos.translation(), seg.direction,sprite.sprite_number)
             };
 
             let snake_sprite = SpriteRender {
                 sprite_sheet: sprite_sheet,
                 sprite_number: sprite_id,
-                flip_horizontal: false,
-                flip_vertical: false,
             };
 
             pos += match seg_dir {
@@ -62,7 +59,6 @@ impl<'s> System<'s> for SpawningSystem {
             
             entities.build_entity()
                     .with(snake_sprite, &mut sprites)
-                    .with(GlobalTransform::default(),&mut gtransforms)
                     .with(Transform::from(pos),&mut transforms)
                     .with(Segment::body(seg_dir, snake.score), &mut segments)
                     .build();
@@ -74,7 +70,7 @@ impl<'s> System<'s> for SpawningSystem {
             let transform = Transform::default();
             
             // Does this need refactoring - ?
-            let transform = if let None = transforms.join().find(|t| t.translation == transform.translation) {
+            let transform = if let None = transforms.join().find(|t| t.translation() == transform.translation()) {
                 generate_random_transform(dimns.width(),dimns.height())
             } else {
                 return;
@@ -91,13 +87,10 @@ impl<'s> System<'s> for SpawningSystem {
             let food_sprite = SpriteRender {
                 sprite_sheet: sprite_sheet,
                 sprite_number: food_color_id,
-                flip_horizontal: false,
-                flip_vertical: false,
             };
 
            entities.build_entity()
                     .with(transform, &mut transforms)
-                    .with(GlobalTransform::default(),&mut gtransforms)
                     .with(food_sprite, &mut sprites)
                     .with(Food::default(), &mut foods)
                     .build();

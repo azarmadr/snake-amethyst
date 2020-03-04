@@ -1,61 +1,67 @@
 extern crate amethyst;
 extern crate rand;
 
-use amethyst::{
-    LoggerConfig,StdoutLog,
-    core::{
-        transform::TransformBundle, 
-    },
-    prelude::*,
-    renderer::{DisplayConfig,DrawSprite, Pipeline, RenderBundle, Stage,ColorMask,ALPHA},
-    input::InputBundle,
-    ui::{UiBundle,DrawUi},
-};
-mod systems;
-mod snake;
-mod spawnables;
-mod custom_game_data;
-mod game;
-
-use game::SnakeGame;
-use custom_game_data::{CustomGameDataBuilder,DispatchData};
-
+//mod systems;
+mod cgd;
+mod states;
+mod resources;
+mod components;
 mod utilities;
+
+use amethyst::{
+    core::{transform::TransformBundle, frame_limiter::FrameRateLimitStrategy},
+    input::{InputBundle, StringBindings},
+    prelude::*,
+    renderer::{
+        RenderFlat2D,
+        plugins::{RenderToWindow},
+        types::DefaultBackend,
+        RenderingBundle,
+    },
+    ui::{RenderUi, UiBundle, NoCustomUi},
+    utils,
+};
+
+use states::LoadingState;
+
 
 
 
 fn main() -> amethyst::Result<()> {
-    let mut logger_config = LoggerConfig::default();
-    logger_config.stdout = StdoutLog::Off;
-    amethyst::start_logger(logger_config);
+    amethyst::start_logger(Default::default());
 
-    let resources_dir = format!("{}/resources/", env!("CARGO_MANIFEST_DIR"));
-    let assets_dir = format!("{}/assets/", env!("CARGO_MANIFEST_DIR"));
+    let root_dir = utils::application_root_dir()?;
+    let resources_dir = root_dir.join("resources");
+    let assets_dir = root_dir.join("assets");
 
-    let config = DisplayConfig::load(resources_dir + "display.ron");
+    let display_config = resources_dir.join("display_config.ron");
+    let input_config = resources_dir.join("input_config.ron");
 
-    let pipe = Pipeline::build().with_stage(
-        Stage::with_backbuffer()
-            .clear_target([0.0, 0.0, 0.0, 1.0], 1.0)
-            .with_pass(DrawSprite::new().with_transparency(
-                ColorMask::all(),
-                ALPHA,
-                None,
-            ))
-            .with_pass(DrawUi::new()),
-    );
+    let input_bundle = InputBundle::<StringBindings>::new();
+    let input_bundle = match input_bundle.with_bindings_from_file(input_config) {
+        Ok(ip) => {
+            ip
+        },
+        Err(_) => {
+            InputBundle::<StringBindings>::new()
+        }
+    };
 
-    let input_bundle = InputBundle::<String, String>::new();
+    let game_data = cgd::GameExecBuilder::default()
+        .with_base_bundle(TransformBundle::new())
+        .with_base_bundle(input_bundle)
+        .with_base_bundle(UiBundle::<StringBindings, NoCustomUi, u32, u32>::new())
+        .with_base_bundle( 
+            RenderingBundle::<DefaultBackend>::new()
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config)?
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                )
+                .with_plugin(RenderFlat2D::default())
+                .with_plugin(RenderUi::default())
+        );
 
-    let game_data = CustomGameDataBuilder::default()
-        .with_bundle(TransformBundle::new(), DispatchData::Core)?
-        .with_bundle(UiBundle::<String,String>::new(),DispatchData::Core)?
-        .with_bundle(RenderBundle::new(pipe, Some(config)).with_sprite_sheet_processor().with_sprite_visibility_sorting(&["transform_system"]), DispatchData::Core)?
-        .with_bundle(input_bundle,DispatchData::Core)?
-        .with_bundle(systems::gameplay::SnakeSystemBundle,DispatchData::Gameplay)?
-        .with_bundle(systems::gui::MenuSystemBundle, DispatchData::Menu)?;
-
-    Application::build(assets_dir, SnakeGame)?
+    Application::build(assets_dir, LoadingState::default())?
         .build(game_data)?
         .run();
     Ok(())

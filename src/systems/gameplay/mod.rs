@@ -5,7 +5,7 @@ pub mod direction;
 pub mod removal;
 pub mod powerup;
 
-use amethyst::core::bundle::{Result, SystemBundle};
+use amethyst::core::bundle::SystemBundle;
 use amethyst::ecs::prelude::DispatcherBuilder;
 
 
@@ -19,7 +19,7 @@ use self::powerup::PowerUpSystem;
 pub struct SnakeSystemBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for SnakeSystemBundle {
-    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+    fn build(self, builder: &mut DispatcherBuilder<'a, 'b>) -> amethyst::Result<()> {
         builder.add(HeadDirectionSystem, "head_movement", &[]);
         builder.add(CollisionSystem, "collision_system", &[]);
         builder.add(PowerUpSystem, "powerup_system", &[]);

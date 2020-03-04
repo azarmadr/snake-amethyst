@@ -1,8 +1,9 @@
-use amethyst::shred::System;
-use amethyst::ecs::prelude::{Join,WriteStorage,Resources,WriteExpect};
-use amethyst::core::transform::Transform;
-use amethyst::core::cgmath::Vector3;
-use amethyst::core::timing::{Stopwatch};
+use amethyst::{
+    ecs::{Join, WriteStorage, Read, Write, WriteExpect, System},
+    core::math::Vector3,
+    core::transform::Transform,
+    core::timing::Stopwatch,
+};
 
 use snake::{Segment,SegmentType,SegmentDirection,Snake};
 

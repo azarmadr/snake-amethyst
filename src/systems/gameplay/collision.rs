@@ -1,7 +1,8 @@
-use amethyst::shred::System;
-use amethyst::ecs::prelude::{Join,WriteStorage,ReadStorage,Entities,ReadExpect};
-use amethyst::core::transform::Transform;
-use amethyst::renderer::ScreenDimensions;
+use amethyst::{
+    window::ScreenDimensions,
+    ecs::{Join, WriteStorage, ReadStorage, Entities, ReadExpect, System},
+    core::transform::Transform,
+};
 
 pub struct CollisionSystem;
 

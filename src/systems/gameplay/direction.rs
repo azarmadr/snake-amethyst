@@ -1,19 +1,20 @@
-use amethyst::shred::System;
-use amethyst::ecs::prelude::{Join,Read,WriteStorage};
-use amethyst::core::transform::Transform;
-use amethyst::input::InputHandler;
-use amethyst::renderer::VirtualKeyCode;
 
+use amethyst::{
+    input::{VirtualKeyCode, InputHandler, StringBindings},
+    ecs::{Join, Read, WriteStorage, System},
+    core::transform::Transform,
+};
 
 use snake::{Segment,SegmentType,SegmentDirection};
 
 pub struct HeadDirectionSystem;
 
 impl<'s> System<'s> for HeadDirectionSystem {
+    
     type SystemData = (
         WriteStorage<'s,Transform>,
         WriteStorage<'s, Segment>,
-        Read<'s, InputHandler<String,String>>,
+        Read<'s, InputHandler<StringBindings>,
     );
     
     fn run(&mut self, (mut _transforms,mut segments,input) : Self::SystemData) {
