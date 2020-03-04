@@ -6,4 +6,5 @@ mod loading;
 pub use self::{
     loading::LoadingState,
     menu::MenuState,
+    gameplay::GameplayState,
 };

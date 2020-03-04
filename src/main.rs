@@ -50,7 +50,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = cgd::GameExecBuilder::default()
         .with_base_bundle(TransformBundle::new())
         .with_base_bundle(input_bundle)
-        .with_base_bundle(UiBundle::<StringBindings, NoCustomUi, u32, u32>::new())
+        .with_base_bundle(UiBundle::<StringBindings>::new())
         .with_base_bundle( 
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(

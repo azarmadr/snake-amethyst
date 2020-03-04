@@ -9,7 +9,7 @@ use amethyst::{
 
 mod ui;
 
-pub use self::ui::UiGenerator;
+pub use self::ui::{UiGenerator, UiEffect};
 
 
 pub fn acquire_screen_dimensions(world: &mut World) -> (f32,f32) {

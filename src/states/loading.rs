@@ -2,7 +2,6 @@ use amethyst::{
     ecs::WorldExt,
     State, StateData, Trans, TransEvent, StateEvent,
     assets::{Handle, ProgressCounter, AssetStorage, Loader},
-    renderer::SpriteSheet,
     ui::{TtfFormat,FontAsset},
 };
 
