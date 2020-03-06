@@ -7,6 +7,7 @@ mod states;
 mod resources;
 mod components;
 mod utilities;
+mod systems;
 
 use amethyst::{
     core::{transform::TransformBundle, frame_limiter::FrameRateLimitStrategy},
@@ -18,13 +19,14 @@ use amethyst::{
         types::DefaultBackend,
         RenderingBundle,
     },
-    ui::{RenderUi, UiBundle, NoCustomUi},
+    ui::{RenderUi, UiBundle},
     utils,
 };
 
-use states::LoadingState;
-
-
+use crate::{
+    states::LoadingState,
+    systems::UiEventHandlerDesc,
+};
 
 
 fn main() -> amethyst::Result<()> {
@@ -59,7 +61,8 @@ fn main() -> amethyst::Result<()> {
                 )
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderUi::default())
-        );
+        )
+        .with_running(UiEventHandlerDesc, "ui_event_handler", &[]);
 
     Application::build(assets_dir, LoadingState::default())?
         .build(game_data)?

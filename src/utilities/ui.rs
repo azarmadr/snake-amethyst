@@ -1,45 +1,42 @@
 use amethyst::{
     Trans, StateEvent,
     ui::{
-        UiTransform, Anchor, UiButtonBuilder, FontAsset, UiText, ScaleMode, Interactable,
+        UiTransform, Anchor, FontAsset, UiText, ScaleMode, Interactable, UiImage,
     },
+    core::transform::Parent,
     assets::{Handle},
     ecs::{World, WorldExt, Entity},
     ecs::prelude::{Builder},
 };
 
 use std::collections::HashMap;
-use crate::cgd::GameExecData;
+use crate::{
+    cgd::GameExecData,
+    resources::UiResources,
+};
 
 /// Generates specified UI. 
 ///
-pub struct UiGenerator {
-    font_handle: Handle<FontAsset>,
-}
+pub struct UiGenerator;
+
 impl UiGenerator {
     const FONT_SIZE: f32 = 50f32;
     const BUTTON_INNER_OFFSET: f32 = 40f32;
     const HOVERED_COLOR: [f32;4] = [1f32,1f32,1f32, 1f32];
     const DEFAULT_COLOR: [f32;4] = [1f32,1f32,1f32, 0.5];
-    
-    pub fn new(font_handle: Handle<FontAsset>) -> Self {
-        Self {
-            font_handle,
-        }
-    }
 
-    pub fn generate_buttons(world: &mut World,font_handle: Handle<FontAsset>,buttons: Vec<(&'static str,UiEffect)>) -> HashMap<Entity, UiEffect> {
+    pub fn generate_buttons(world: &mut World,ui_res: UiResources,buttons: Vec<(&'static str,UiEffect, bool)>) -> HashMap<Entity, UiEffect> {
         let length = buttons.len();
         let mut widgets = HashMap::new();
 
-        for (idx, (text, ui_effect)) in buttons.iter().enumerate() {
+        for (idx, (text, ui_effect, is_check)) in buttons.iter().enumerate() {
             let (x_size, y_size) = Self::acquire_size(text.len());
             let y = Self::acquire_y_position(length as u32, idx as u32);
 
             let text_str = String::from(*text);
 
             let ui_text = UiText::new(
-                font_handle.clone(),
+                ui_res.font_handle.clone(),
                 text_str.clone(),
                 Self::DEFAULT_COLOR,
                 Self::FONT_SIZE,
@@ -62,13 +59,30 @@ impl UiGenerator {
             .with(Interactable)
             .build();
 
+            if *is_check {
+                let ui_image = UiImage::Texture(ui_res.checked_button.clone());
+                let ui_image_trans = UiTransform::new(
+                    text_str.clone(),
+                    Anchor::Middle,
+                    Anchor::Middle,
+                    Self::BUTTON_INNER_OFFSET + x_size / 2f32,
+                    0f32,
+                    0f32,
+                    64f32,
+                    64f32,
+                );
+                
+                world.create_entity()
+                .with(ui_image)
+                .with(ui_image_trans)
+                .with(Interactable)
+                .with(Parent::new(entity))
+                .build();
+            }
+
             widgets.insert(entity, *ui_effect);
         }
         widgets
-    }
-
-    pub fn create_checkbox(&mut self,world: &mut World) {
-
     }
     fn acquire_y_position(num_of_buttons: u32,idx: u32) -> f32 {
         let starting_y_offset = num_of_buttons as f32 * Self::BUTTON_INNER_OFFSET;
@@ -99,16 +113,18 @@ pub enum UiEffect {
     NewGame,
     Options,
     Quit,
+    None,
 }
 
-use crate::states::{GameplayState};
+use crate::states::{GameplayState, OptionsState};
 
 impl<'a,'b> UiEffect {
-    pub fn as_trans(ui_effect: Self) -> Trans<GameExecData<'a, 'b>, StateEvent> {
+    pub fn as_trans(ui_effect: Self,ui_res: UiResources) -> Trans<GameExecData<'a, 'b>, StateEvent> {
         match ui_effect {
             Self::NewGame => Trans::Push(Box::new(GameplayState)),
-            Self::Options => Trans::None,
+            Self::Options => Trans::Push(Box::new(OptionsState::new(ui_res.clone()))),
             Self::Quit => Trans::Quit, 
+            Self::None => Trans::None,
         }
     }
 }

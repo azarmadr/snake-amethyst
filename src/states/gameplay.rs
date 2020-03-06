@@ -1,9 +1,6 @@
 use amethyst::{
     input::{InputEvent,VirtualKeyCode},
-    ecs::WorldExt,
-    State, StateData, Trans, TransEvent, StateEvent,
-    assets::Handle,
-    ui::FontAsset,
+    State, StateData, Trans, StateEvent,
 };
 
 use crate::cgd::GameExecData;

@@ -1,30 +1,31 @@
 use amethyst::{
     ecs::{WorldExt, Entity},
-    State, StateData, Trans, TransEvent, StateEvent,
-    assets::{Handle, ProgressCounter, AssetStorage, Loader},
+    State, StateData, Trans, StateEvent,
     core::Hidden,
-    ui::{TtfFormat,FontAsset, UiButtonBuilder, Anchor, UiText,UiEvent, UiEventType, UiTransform},
+    ui::{UiText,UiEvent, UiEventType},
 };
 use crate::{
     cgd::GameExecData,
     utilities::{UiGenerator,UiEffect},
+    resources::UiResources,
 };
+
 use std::collections::HashMap;
 
 
 pub struct MenuState {
-    font_handle: Handle<FontAsset>,
-    main_menu_items: HashMap<Entity, UiEffect>,
+    ui_res: UiResources,
+    widgets: HashMap<Entity, UiEffect>,
 }
 
 impl MenuState {
 
-    pub fn new(font_handle: Handle<FontAsset>) -> Self {
-        let main_menu_items = HashMap::new();
+    pub fn new(ui_res: UiResources) -> Self {
+        let widgets = HashMap::new();
 
         Self {
-            font_handle,
-            main_menu_items,
+            ui_res,
+            widgets,
         }
     }
 }
@@ -38,13 +39,12 @@ impl<'a, 'b> State<GameExecData<'a, 'b>, StateEvent> for MenuState {
         crate::utilities::initialize_camera(world);
 
         let buttons = vec![
-            ("NEW GAME", UiEffect::NewGame),
-            ("OPTIONS",  UiEffect::Options),
-            ("QUIT",     UiEffect::Quit),
+            ("NEW GAME", UiEffect::NewGame, false),
+            ("OPTIONS",  UiEffect::Options, false),
+            ("QUIT",     UiEffect::Quit, false),
         ];
 
-        self.main_menu_items = UiGenerator::generate_buttons(world,self.font_handle.clone(), buttons);
-        
+        self.widgets = UiGenerator::generate_buttons(world,self.ui_res.clone(), buttons);
     }
     fn handle_event(&mut self, data: StateData<GameExecData>, event: StateEvent,) -> Trans<GameExecData<'a, 'b>, StateEvent> {
         let world = data.world;
@@ -59,8 +59,8 @@ impl<'a, 'b> State<GameExecData<'a, 'b>, StateEvent> for MenuState {
                     UiGenerator::unset_hover_color(txt);
                 }
                 
-                if let Some(ui_effect) = self.main_menu_items.get(&target) {
-                    return UiEffect::as_trans(*ui_effect);
+                if let Some(ui_effect) = self.widgets.get(&target) {
+                    return UiEffect::as_trans(*ui_effect, self.ui_res.clone());
                 } 
                 Trans::None
             },
@@ -98,7 +98,7 @@ impl<'a, 'b> State<GameExecData<'a, 'b>, StateEvent> for MenuState {
         
         let mut hidden_storage = world.write_storage::<Hidden>();
         
-        for e in self.main_menu_items.keys() {
+        for e in self.widgets.keys() {
             let _ = hidden_storage.insert(*e, Hidden);
         }
     }
@@ -107,7 +107,7 @@ impl<'a, 'b> State<GameExecData<'a, 'b>, StateEvent> for MenuState {
         let world = data.world;
         
         let mut hidden_storage = world.write_storage::<Hidden>();
-        for e in self.main_menu_items.keys() {
+        for e in self.widgets.keys() {
             let _ = hidden_storage.remove(*e);
         }
 

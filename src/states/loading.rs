@@ -3,17 +3,20 @@ use amethyst::{
     State, StateData, Trans, TransEvent, StateEvent,
     assets::{Handle, ProgressCounter, AssetStorage, Loader},
     ui::{TtfFormat,FontAsset},
+    renderer::Texture,
+    renderer::formats::texture::ImageFormat,
 };
 
 use crate::{
     cgd::GameExecData,
     states::MenuState,
+    resources::UiResources,
 };
 
 #[derive(Default)]
 pub struct LoadingState{ 
     counter: ProgressCounter,
-    font_handle: Option<Handle<FontAsset>>,
+    ui_res: Option<UiResources>,
 }
 
 impl<'a, 'b> State<GameExecData<'a, 'b>, StateEvent> for LoadingState {
@@ -30,17 +33,33 @@ impl<'a, 'b> State<GameExecData<'a, 'b>, StateEvent> for LoadingState {
                 &font_storage,
             )
         };
-        self.font_handle = Some(font_handle);
 
-        //let sh = crate::utilities::decompile_spritesheet(world, "basic_tile.png", (65f32, 130f32), (64f32, 64f32));
-        //self.sheet_handle = Some(sh)
+        let (checked, unchecked) = { 
+            let loader = world.read_resource::<Loader>();
+            let texture_storage = world.read_resource::<AssetStorage<Texture>>();
+            let checked = loader.load(
+                "checkbox_checked.png",
+                ImageFormat::default(),
+                &mut self.counter,
+                &texture_storage,
+            ); 
+            let unchecked = loader.load(
+                "checkbox_unchecked.png",
+                ImageFormat::default(),
+                &mut self.counter,
+                &texture_storage,
+            );
+            (checked, unchecked)
+        };
+        self.ui_res = Some(UiResources::new(font_handle, checked, unchecked));
     }
+
     fn update(&mut self,data: StateData<GameExecData>) -> Trans<GameExecData<'a, 'b>, StateEvent> {
         data.data.update(&data.world, true);
 
         if self.counter.is_complete() {
-            if let Some(ref font_handle) = &self.font_handle {
-                return Trans::Switch(Box::new(MenuState::new(font_handle.clone())));
+            if let Some(ref ui_res) = &self.ui_res {
+                return Trans::Switch(Box::new(MenuState::new(ui_res.clone())));
             }
             
         } 
